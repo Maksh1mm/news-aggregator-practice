@@ -11,42 +11,45 @@ async function loadData() {
     // 1.1) Підтягуємо новини
     await fetch(`${API_BASE}/fetch/${STUDENT_ID}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${AUTH_TOKEN}`
+      }
     });
 
     // 1.2) Аналіз тональності
     const res = await fetch(`${API_BASE}/analyze/${STUDENT_ID}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${AUTH_TOKEN}`
+      }
     });
-    const data = await res.json();
+
+    const data = await res.json(); // ✅ Оголошення data
     console.log("Одержані дані з бекенду:", data);
 
-
-    // 1.3) Зберігаємо у allArticles
+    // 1.3) Обробка
     allArticles = data.articles.map(a => ({
-        
       ...a,
       date: a.published ? new Date(a.published) : new Date()
     }));
-    
+
+    // 1.4) Якщо нічого не прийшло — вставити тестову новину
     if (allArticles.length === 0) {
-  allArticles = [
-    {
-      title: "Тестова новина",
-      link: "https://example.com",
-      published: new Date().toISOString(),
-      sentiment: "positive",
-      scores: { compound: 0.8 },
-      date: new Date()
+      allArticles = [{
+        title: "Тестова новина",
+        link: "https://example.com",
+        published: new Date().toISOString(),
+        sentiment: "positive",
+        scores: { compound: 0.8 },
+        date: new Date()
+      }];
     }
-  ];
-}
 
+    // 1.5) Рендер
+    render();
 
-    // Рендеримо вміст
-    console.log("Отримані статті:", allArticles);
- render();
   } catch (err) {
     console.error("Помилка під час завантаження даних:", err);
   }

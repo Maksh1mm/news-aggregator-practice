@@ -2,9 +2,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from config import STUDENT_ID, SOURCES
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from fastapi import Depends
 import feedparser
 import config
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 analyzer = SentimentIntensityAnalyzer()
 app = FastAPI()
 
@@ -41,6 +45,16 @@ app.add_middleware(
 # Пам'ять для збереження джерел (для кожного STUDENT_ID окремо)
 store = {STUDENT_ID: SOURCES.copy()}
 
+@app.get("/info")
+def info():
+    return {"status": "Backend is working"}
+
+@app.post("/token")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    if form_data.username != STUDENT_ID or form_data.password != "password123":
+        raise HTTPException(status_code=400, detail="Invalid credentials")
+    return {"access_token": "demo-token", "token_type": "bearer"}
+    
 @app.get("/sources/{student_id}")
 def get_sources(student_id: str):
     if student_id not in store:
@@ -58,7 +72,9 @@ def add_source(student_id: str, payload: dict):
     return {"sources": store[student_id]}
 
 @app.post("/fetch/{student_id}")
-def fetch_news(student_id: str):
+def fetch_news(student_id: str, token: str = Depends(oauth2_scheme)):
+    if token != "demo-token":
+        raise HTTPException(status_code=401, detail="Unauthorized")
     if student_id != STUDENT_ID:
         raise HTTPException(status_code=404, detail="Student not found")
     # Очищаємо попередній кеш
@@ -84,7 +100,9 @@ def get_news(student_id: str):
 news_store = {STUDENT_ID: []}
 
 @app.post("/analyze/{student_id}")
-def analyze_tone(student_id: str):
+def analyze_tone(student_id: str, token: str = Depends(oauth2_scheme)):
+    if token != "demo-token":
+        raise HTTPException(status_code=401, detail="Unauthorized")
     if student_id != STUDENT_ID:
         raise HTTPException(status_code=404, detail="Student not found")
     articles = news_store.get(student_id, [])
@@ -102,4 +120,3 @@ def analyze_tone(student_id: str):
         # Додаємо поля "sentiment" і "scores" в копію статті
         result.append({**art, "sentiment": label, "scores": scores})
     return {"analyzed": len(result), "articles": result}
-
