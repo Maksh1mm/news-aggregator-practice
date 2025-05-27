@@ -24,7 +24,7 @@ def test_fetch_and_get(monkeypatch):
     # Підмінюємо функцію parse, щоб не робити реальний HTTP-запит
     monkeypatch.setattr(feedparser, "parse", lambda url: DummyFeed)
     news_store[STUDENT_ID] = []
-    res1 = client.post(f"/fetch/{STUDENT_ID}")
+    res1 = client.post(f"/fetch/{STUDENT_ID}", headers={"Authorization": "Bearer demo-token"})
     assert res1.status_code == 200
     assert res1.json() == {"fetched": 2}
     res2 = client.get(f"/news/{STUDENT_ID}")

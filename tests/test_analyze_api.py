@@ -7,7 +7,7 @@ client = TestClient(app)
 
 def test_analyze_empty():
     news_store[STUDENT_ID] = []
-    res = client.post(f"/analyze/{STUDENT_ID}")
+    res = client.post(f"/analyze/{STUDENT_ID}", headers={"Authorization": "Bearer demo-token"})
     assert res.status_code == 200
     assert res.json() == {"analyzed": 0, "articles": []}
 
@@ -27,7 +27,7 @@ def test_analyze_real(monkeypatch):
     # Заміна реального аналізатора на фейковий
     monkeypatch.setattr(vs, "SentimentIntensityAnalyzer", FakeAnalyzer)
 
-    res = client.post(f"/analyze/{STUDENT_ID}")
+    res = client.post(f"/analyze/{STUDENT_ID}", headers={"Authorization": "Bearer demo-token"})
     assert res.status_code == 200
     data = res.json()
     assert data["analyzed"] == 2
