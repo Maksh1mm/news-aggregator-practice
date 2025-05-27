@@ -27,9 +27,9 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-asyncio httpx feedparser
 
-      - name: Run only news tests
-        run: pytest tests/test_news_api.py -q
-        
+      - name: Run news API tests
+        run: pytest tests/test_fetch_api.py tests/test_analyze_api.py tests/test_sources_api.py -q
+
   frontend-tests:
     runs-on: ubuntu-latest
     needs: backend-tests
